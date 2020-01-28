@@ -1,3 +1,4 @@
+'use strict';
 const mat4 = require('gl-mat4');
 const regl = require('regl')({ extensions: [ 'angle_instanced_arrays' ] });
 const fps = require('./fps')();

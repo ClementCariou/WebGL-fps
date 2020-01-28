@@ -1,3 +1,4 @@
+'use strict';
 const gen = (n, c, i = []) =>
 	Array(n[0]).fill().flatMap((_, j) => (n.length === 1 ? [ c(...i, j) ] : gen(n.slice(1), c, [ ...i, j ])));
 
@@ -6,12 +7,12 @@ module.exports = {
 		//https://github.com/evanw/csg.js/blob/master/csg.js
 		positions: [ 0, 4, 6, 2, 1, 3, 7, 5, 0, 1, 5, 4, 2, 6, 7, 3, 0, 2, 3, 1, 4, 5, 7, 6 ]
 			.flatMap((i) => [ i & 1, i & 2, i & 4 ])
-			.map((i) => (radius || 1) * 2 * !!i - 1),
+			.map((i) => (radius || 1) * (2 * !!i - 1)),
 		normals: gen([ 3, 2, 4, 3 ], (i, j, _, k) => (i == k ? 2 * j - 1 : 0)),
 		texcoords: gen([ 6, 8 ], (_, i) => [ 0, 0, 0, 1, 1, 1, 1, 0 ][i]),
 		elements: gen([ 6, 6 ], (i, j) => i * 4 + [ 0, 1, 2, 0, 2, 3 ][j])
 	}),
-	cylinder: (radius = 1, height = 2, radialSubdivisions = 12) => {
+	cylinder: (radius = 1, height = 2, radialSubdivisions = 20) => {
 		//https://github.com/greggman/twgl.js/blob/master/src/primitives.js
 		//TODO: convert to functionnal programming
 		const positions = [];

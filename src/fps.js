@@ -1,9 +1,11 @@
+'use strict';
 const mat4 = require('gl-mat4');
 const vec3 = require('gl-vec3');
 const lock = require('pointer-lock');
 
 const sensibility = 0.002;
 const limitAngle = 3 / 2 * Math.PI;
+//Basic physic is simulated manually for now
 const walkSpeed = 0.6;
 const runSpeed = 1;
 const floor = 0.1;

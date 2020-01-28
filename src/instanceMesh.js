@@ -1,3 +1,4 @@
+'use strict';
 const genNormals = require('angle-normals');
 const glsl = require('glslify');
 
@@ -13,7 +14,7 @@ module.exports = (regl, { elements, positions, normals, texcoords }, modelMatric
 		vert: glsl`
       precision mediump float;
       uniform mat4 projection, view;
-      attribute vec4 model0, model1, model2, model3;
+      attribute vec4 m0, m1, m2, m3;
       attribute vec3 position, normal;
       attribute vec2 uv;
       varying vec3 vnormal;
@@ -21,26 +22,26 @@ module.exports = (regl, { elements, positions, normals, texcoords }, modelMatric
       void main () {
         vnormal = normal;
         vuv = uv;
-        mat4 model = mat4(model0, model1, model2, model3);
+        mat4 model = mat4(m0, m1, m2, m3);
         gl_Position = projection * view * model * vec4(position, 1.0);
       }`,
 		attributes: {
 			position: positions,
 			normal: normals || genNormals(elements, positions),
 			uv: texcoords || [],
-			model0: {
+			m0: {
 				buffer: regl.buffer(modelMatrices.map((m) => m.model.slice(0, 4))),
 				divisor: 1
 			},
-			model1: {
+			m1: {
 				buffer: regl.buffer(modelMatrices.map((m) => m.model.slice(4, 8))),
 				divisor: 1
 			},
-			model2: {
+			m2: {
 				buffer: regl.buffer(modelMatrices.map((m) => m.model.slice(8, 12))),
 				divisor: 1
 			},
-			model3: {
+			m3: {
 				buffer: regl.buffer(modelMatrices.map((m) => m.model.slice(12, 16))),
 				divisor: 1
 			}

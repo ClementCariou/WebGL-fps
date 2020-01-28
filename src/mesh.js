@@ -1,3 +1,4 @@
+'use strict';
 const genNormals = require('angle-normals');
 const glsl = require('glslify');
 

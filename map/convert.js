@@ -27,22 +27,41 @@ function roundVector([ x, y, z ]) {
 	return [ Math.round(x * 10) / 10, Math.round(y * 10) / 10, Math.round(z * 10) / 10 ];
 }
 
+function parseNode(node, nodes, templates) {
+	let translation = node.translation ? roundVector(node.translation) : [ 0, 0, 0 ];
+	let rotation = node.rotation ? quaternionToEuler(node.rotation) : [ 0, 0, 0 ];
+	let scale = node.scale ? roundVector(node.scale) : [ 1, 1, 1 ];
+	let type = 3;
+	if (node.name.startsWith('Cube')) type = 0;
+	else if (node.name.startsWith('Cylinder')) type = 1;
+	else if (node.name.startsWith('Icosphere') || node.name.startsWith('Sphere')) type = 2;
+	let children = [];
+	if (node.children) children = node.children.map((i) => parseNode(nodes[i], nodes, templates));
+	let result = [ type, ...translation, ...rotation, ...scale, ...children ];
+	const hash = JSON.stringify(children); //TODO fix the ordering problem
+	if (templates[hash]) templates[hash].push(result);
+	else templates[hash] = [ result ];
+	return result;
+}
+
 let scenes = map.scenes.map((scene) => {
-	let cube = [];
-	let cylinder = [];
-	let sphere = [];
-	for (let node_id of scene.nodes) {
-		let node = map.nodes[node_id];
-		//(doesn't support matrices)
-		let translation = node.translation ? roundVector(node.translation) : [ 0, 0, 0 ];
-		let rotation = node.rotation ? quaternionToEuler(node.rotation) : [ 0, 0, 0 ];
-		let scale = node.scale ? roundVector(node.scale) : [ 1, 1, 1 ];
-		let data = [ ...translation, ...rotation, ...scale ];
-		if (node.name.startsWith('Cube')) cube.push(...data);
-		else if (node.name.startsWith('Cylinder')) cylinder.push(...data);
-		else if (node.name.startsWith('Icosphere')) sphere.push(...data);
+	let templates = {};
+	let nodes = scene.nodes.map((n) => parseNode(map.nodes[n], map.nodes, templates));
+	let i = 4;
+	for (let name in templates) {
+		if (name === '[]') continue;
+		let template = templates[name];
+		template.map((t) => (t[0] = i));
+		template.slice(1).map((t) => t.splice(10));
+		i++;
 	}
-	return [ cube, cylinder, sphere ];
+	var indices = JSON.stringify(nodes).split('').map((c) => '0123456789[].,- '.indexOf(c));
+	if (indices.length % 2) indices.push(15); //edge case: odd number of char => add a padding space char
+	var len = indices.length / 2;
+	var cumulated = new Uint8Array(len);
+	// Pack the data
+	for (let i = 0; i < len; i++) cumulated[i] = (indices[i * 2] << 4) | indices[i * 2 + 1];
+	return Buffer.from(cumulated, 'binary').toString('base64');
 });
 
 fs.writeFileSync('map/map.json', JSON.stringify(scenes));

@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"scripts": {
 		"start": "budo src/index.js",
-		"build": "browserify -p tinyify src/index.js > build/bundle.js",
+		"build": "browserify -p tinyify src/index.js | htmlify > index.html",
 		"map": "node map/convert.js",
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -25,6 +25,7 @@
 		"budo": "^11.6.3",
 		"glslify": "^7.0.0",
 		"glslify-hex": "^2.1.1",
+		"inline-htmlify": "^2.0.1",
 		"tinyify": "^2.5.2",
 		"uglify-js": "^3.7.6"
 	},
