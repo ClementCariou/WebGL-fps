@@ -37,8 +37,10 @@ function parseNode(node, nodes, templates) {
 	else if (node.name.startsWith('Icosphere') || node.name.startsWith('Sphere')) type = 2;
 	let children = [];
 	if (node.children) children = node.children.map((i) => parseNode(nodes[i], nodes, templates));
+	children.sort((a, b) => JSON.stringify(a) > JSON.stringify(b));
 	let result = [ type, ...translation, ...rotation, ...scale, ...children ];
-	const hash = JSON.stringify(children); //TODO fix the ordering problem
+	//TODO: smarter template detection implementation to support partial templates (better compression and rubustness)
+	const hash = JSON.stringify(children);
 	if (templates[hash]) templates[hash].push(result);
 	else templates[hash] = [ result ];
 	return result;
@@ -48,14 +50,19 @@ let scenes = map.scenes.map((scene) => {
 	let templates = {};
 	let nodes = scene.nodes.map((n) => parseNode(map.nodes[n], map.nodes, templates));
 	let i = 4;
+	let templateArray = [];
 	for (let name in templates) {
 		if (name === '[]') continue;
 		let template = templates[name];
-		template.map((t) => (t[0] = i));
-		template.slice(1).map((t) => t.splice(10));
+		templateArray.push(template[0].slice(10));
+		template.map((t) => {
+			t[0] = i;
+			t.splice(10);
+		});
 		i++;
 	}
-	var indices = JSON.stringify(nodes).split('').map((c) => '0123456789[].,- '.indexOf(c));
+	const str = JSON.stringify([ templateArray, nodes ]);
+	var indices = str.split('').map((c) => '0123456789[].,- '.indexOf(c));
 	if (indices.length % 2) indices.push(15); //edge case: odd number of char => add a padding space char
 	var len = indices.length / 2;
 	var cumulated = new Uint8Array(len);

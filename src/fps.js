@@ -55,6 +55,7 @@ module.exports = function() {
 	// First person scope
 	var lastTime = 0;
 	return {
+		pos,
 		view: () => view,
 		tick: ({ fly, time }) => {
 			// Delta time
