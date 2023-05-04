@@ -1,16 +1,15 @@
 'use strict';
-const glsl = require('glslify');
 
 module.exports = (regl) =>
 	regl({
-		frag: glsl`
+		frag: `
       precision mediump float;
       varying vec3 vnormal;
       varying vec2 vuv;
       void main () {
         gl_FragColor = vec4(mix(vec3(vuv.xy, 1.0),vnormal,0.5), 1.0);
       }`,
-		vert: glsl`
+		vert: `
       precision mediump float;
       uniform mat4 projection, view;
       attribute vec4 m0, m1, m2, m3;

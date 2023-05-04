@@ -1,5 +1,4 @@
 'use strict';
-const glsl = require('glslify');
 
 const SHADOW_RES = 4096;
 // This is copy pasted from the directional light shadow example
@@ -17,13 +16,13 @@ module.exports = (regl) => {
 	});
 	return {
 		drawDepth: regl({
-			frag: glsl`
+			frag: `
             precision mediump float;
             varying vec3 vPosition;
             void main () {
                 gl_FragColor = vec4(vec3(vPosition.z), 1.0);
             }`,
-			vert: glsl`
+			vert: `
             precision mediump float;
             attribute vec3 position;
             uniform mat4 lightProjection, lightView;
@@ -38,7 +37,7 @@ module.exports = (regl) => {
 			framebuffer: fbo
 		}),
 		drawNormals: regl({
-			frag: glsl`
+			frag: `
             precision mediump float;
             varying vec3 vNormal;
             varying vec3 vShadowCoord;
@@ -76,7 +75,7 @@ module.exports = (regl) => {
                 }
                 gl_FragColor = vec4((ambient + diffuse * v), 1.0);
             }`,
-			vert: glsl`
+			vert: `
             precision mediump float;
             uniform mat4 projection, view;
             uniform mat4 lightProjection, lightView;
