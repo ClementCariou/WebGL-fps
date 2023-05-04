@@ -13,6 +13,8 @@ const gravitySmall = -3;
 const gravity = -2;
 const gravityDrop = -3;
 const jumpSpeed = 0.8;
+const flySpeed = 1.2;
+const fastFlySpeed = 2.2;
 
 module.exports = function() {
 	var mouse = [ 0, 0 ];
@@ -23,6 +25,7 @@ module.exports = function() {
 	var rotate = true;
 	var sprint = false;
 	var jump = false;
+	var fly = false;
 
 	// Mouse input
 	const pointer = lock(document.body);
@@ -42,6 +45,7 @@ module.exports = function() {
 		keys[e.code] = e.type === 'keydown';
 		sprint = e.shiftKey;
 		if (keys['Space'] && !jump) jump = jumpSpeed;
+		if (keys['KeyF']) fly = !fly;
 		const left = keys['KeyA'] || keys['ArrowLeft'] ? 1 : 0;
 		const right = keys['KeyD'] || keys['ArrowRight'] ? 1 : 0;
 		const up = keys['KeyW'] || keys['ArrowUp'] ? 1 : 0;
@@ -57,7 +61,7 @@ module.exports = function() {
 	return {
 		pos,
 		view: () => view,
-		tick: ({ fly, time }) => {
+		tick: ({ time }) => {
 			// Delta time
 			let dt = time - lastTime;
 			lastTime = time;
@@ -73,7 +77,9 @@ module.exports = function() {
 			if (!fly) force[1] = 0;
 			vec3.normalize(force, force);
 			// Translation
-			vec3.add(pos, pos, vec3.scale(force, force, (sprint ? runSpeed : walkSpeed) * dt));
+			let speed = fly ? flySpeed : walkSpeed;
+			if (sprint) speed = fly ? fastFlySpeed : runSpeed;
+			vec3.add(pos, pos, vec3.scale(force, force, speed * dt));
 			if (jump && !fly) {
 				jump += (jump > 0 ? (keys['Space'] ? gravity : gravitySmall) : gravityDrop) * dt;
 				pos[1] += jump * dt;

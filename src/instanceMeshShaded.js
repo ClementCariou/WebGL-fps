@@ -54,26 +54,27 @@ module.exports = (regl) => {
                 return step(b-bias, a);
             }
             void main () {
-                vec3 ambient = vec3(ambientLightAmount);
                 float cosTheta = dot(vNormal, lightDir);
-                vec3 diffuse = vec3(diffuseLightAmount) * (cosTheta+1.0)/2.0;
-                float v = 1.0; // shadow value
                 vec2 co = vShadowCoord.xy * 0.5 + 0.5;// go from range [-1,+1] to range [0,+1]
                 // counteract shadow acne.
                 float bias = max(maxBias * (1.0 - cosTheta), minBias);
-                float v0 = shadowSample(co + texelSize * vec2(0.0, 0.0), vShadowCoord.z, bias);
-                float v1 = shadowSample(co + texelSize * vec2(1.0, 0.0), vShadowCoord.z, bias);
-                float v2 = shadowSample(co + texelSize * vec2(0.0, 1.0), vShadowCoord.z, bias);
-                float v3 = shadowSample(co + texelSize * vec2(1.0, 1.0), vShadowCoord.z, bias);
+                float shadow0 = shadowSample(co + texelSize * vec2(0.0, 0.0), vShadowCoord.z, bias);
+                float shadow1 = shadowSample(co + texelSize * vec2(1.0, 0.0), vShadowCoord.z, bias);
+                float shadow2 = shadowSample(co + texelSize * vec2(0.0, 1.0), vShadowCoord.z, bias);
+                float shadow3 = shadowSample(co + texelSize * vec2(1.0, 1.0), vShadowCoord.z, bias);
                 // PCF filtering
-                v = (v0 + v1 + v2 + v3) * (1.0 / 4.0) + 0.2;
+                float shadow = (shadow0 + shadow1 + shadow2 + shadow3) / 4.0;
                 // if outside light frustum, render now shadow.
                 // If WebGL had GL_CLAMP_TO_BORDER we would not have to do this,
                 // but that is unfortunately not the case...
                 if(co.x < 0.00 || co.x > 1.0 || co.y < 0.0 || co.y > 1.0) {
-                  v = 1.0;
+                    shadow = 1.0;
                 }
-                gl_FragColor = vec4((ambient + diffuse * v), 1.0);
+                float diffuseValue = clamp((cosTheta + 1.0) / 2.0, 0.0, 1.0);
+                diffuseValue = diffuseValue * (shadow + 1.0) / 2.0;
+                vec3 ambient = vec3(ambientLightAmount);
+                vec3 diffuse = vec3(diffuseLightAmount) * diffuseValue;
+                gl_FragColor = vec4(pow((ambient + diffuse), vec3(1.0/2.2)), 1.0);
             }`,
 			vert: `
             precision mediump float;
@@ -89,18 +90,18 @@ module.exports = (regl) => {
 
             void main () {
                 vPosition = position;
-                vNormal = normal;
                 mat4 model = mat4(m0, m1, m2, m3);
+                vNormal = normalize(mat3(model) * normal);
                 vec4 worldSpacePosition = model * vec4(position, 1);
                 gl_Position = projection * view * worldSpacePosition;
                 vShadowCoord = (lightProjection * lightView * worldSpacePosition).xyz;
             }`,
 			uniforms: {
 				shadowMap: fbo,
-				minBias: () => 0.002,
-				maxBias: () => 0.01,
-				ambientLightAmount: 0.5,
-				diffuseLightAmount: 1
+				minBias: 0.002,
+				maxBias: 0.004,
+				ambientLightAmount: 0.3,
+				diffuseLightAmount: 0.7
 			}
 		})
 	};
